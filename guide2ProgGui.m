@@ -31,24 +31,34 @@ function guide2ProgGui(figureName)
     % Function Start
     fprintf(fid,'function %s\n',fileName(1:find(fileName=='.')-1));
     % Function Body
-    for obj = findall(fig)'
+    % All GUIDE Objects
+    objects = findall(fig);
+    % Parent Tags of each Object
+    parents = get(objects,'parent');
+    parentsTag = cell(length(parents),1);
+    for i = 1:length(parents)
+        parentsTag{i} = get(parents{i},'tag');
+    end
+    % Objects creation Code
+    for obj = objects'
         % Common Properties
         %un = get(obj,'unit'); % Unit
         set(obj,'units','pixels')
         pos = get(obj,'position');  % Position
         tag = get(obj,'tag');  % Object's Name, TAG
         
+        
         if strcmp(get(obj,'type'),'figure')
             % Relevant Properties
             col = get(obj,'color');
-            fprintf(fid,'\tfigure(''MenuBar'',''None'',''NumberTitle'',''off'',''Name'',''%s'',...\n',get(obj,'name'));
-            fprintf(fid,'\t\t''color'',[%.2f,%.2f,%.2f],''position'',[%.0f,%.0f,%.0f,%.0f],''visible'',''off'')%% %s\n',col,pos,tag);
+            fprintf(fid,'\t%s = figure(''MenuBar'',''None'',''NumberTitle'',''off'',''Name'',''%s'',...\n',tag,get(obj,'name'));
+            fprintf(fid,'\t\t''color'',[%.2f,%.2f,%.2f],''position'',[%.0f,%.0f,%.0f,%.0f],''visible'',''off'');%% %s\n',col,pos,tag);
             fprintf(fid,'\tmovegui(gcf,''center'')\n');
             fprintf(fid,'\n');
         elseif strcmp(get(obj,'type'),'uicontrol')
             col1 = get(obj,'backgroundcolor');
             col2 = get(obj,'foregroundcolor');
-            fprintf(fid,'\tuicontrol(''style'',''%s'',''fontname'',''%s'',''fontsize'',%.1f,...\n',get(obj,'style'),get(obj,'fontname'),get(obj,'fontsize'));
+            fprintf(fid,'\tuicontrol(%s,''style'',''%s'',''fontname'',''%s'',''fontsize'',%.1f,...\n',parentsTag{obj==objects},get(obj,'style'),get(obj,'fontname'),get(obj,'fontsize'));
             fprintf(fid,'\t\t''backgroundcolor'',[%.2f,%.2f,%.2f],''foregroundcolor'',[%.2f,%.2f,%.2f],''position'',[%.0f,%.0f,%.0f,%.0f],...\n',col1,col2,pos);
             % String Property
             str = get(obj,'string');
@@ -77,27 +87,33 @@ function guide2ProgGui(figureName)
             fprintf(fid,'\n');
         elseif strcmp(get(obj,'type'),'axes')
             col = get(obj,'color');
-            fprintf(fid,'\taxes(''color'',[%.2f,%.2f,%.2f],''units'',''pixels'',''position'',[%.0f,%.0f,%.0f,%.0f])%% %s\n',col,pos,tag);
+            fprintf(fid,'\taxes(''parent'',%s,''color'',[%.2f,%.2f,%.2f],''units'',''pixels'',''position'',[%.0f,%.0f,%.0f,%.0f])%% %s\n',parentsTag{obj==objects},col,pos,tag);
             fprintf(fid,'\n');
         elseif strcmp(get(obj,'type'),'uipanel')
             col1 = get(obj,'backgroundcolor');
             col2 = get(obj,'foregroundcolor');
             str = get(obj,'title');
-            fprintf(fid,'\tuipanel(''units'',''pixels'',''title'',''%s'',''fontname'',''%s'',''fontsize'',%.1f,...\n',str{1},get(obj,'fontname'),get(obj,'fontsize'));
+            if ~iscell(str)
+                str = cellstr(str);
+            end
+            fprintf(fid,'\t%s = uipanel(''parent'',%s,''units'',''pixels'',''title'',''%s'',''fontname'',''%s'',''fontsize'',%.1f,...\n',tag,parentsTag{obj==objects},str{1},get(obj,'fontname'),get(obj,'fontsize'));
             fprintf(fid,'\t\t''backgroundcolor'',[%.2f,%.2f,%.2f],''foregroundcolor'',[%.2f,%.2f,%.2f],''position'',[%.0f,%.0f,%.0f,%.0f],...\n',col1,col2,pos);
-            fprintf(fid,'\t\t''fontangle'',''%s'',''fontweight'',''%s'',''titleposition'',''%s'')%% %s\n',get(obj,'fontangle'),get(obj,'fontweight'),get(obj,'titleposition'),tag);
+            fprintf(fid,'\t\t''fontangle'',''%s'',''fontweight'',''%s'',''titleposition'',''%s'');%% %s\n',get(obj,'fontangle'),get(obj,'fontweight'),get(obj,'titleposition'),tag);
             fprintf(fid,'\n');
         elseif strcmp(get(obj,'type'),'uibuttongroup')
             col1 = get(obj,'backgroundcolor');
             col2 = get(obj,'foregroundcolor');
             str = get(obj,'title');
-            fprintf(fid,'\tuibuttongroup(''units'',''pixels'',''title'',''%s'',''fontname'',''%s'',''fontsize'',%.1f,...\n',str{1},get(obj,'fontname'),get(obj,'fontsize'));
+            if ~iscell(str)
+                str = cellstr(str);
+            end
+            fprintf(fid,'\t%s = uibuttongroup(''parent'',%s,''units'',''pixels'',''title'',''%s'',''fontname'',''%s'',''fontsize'',%.1f,...\n',tag,parentsTag{obj==objects},str{1},get(obj,'fontname'),get(obj,'fontsize'));
             fprintf(fid,'\t\t''backgroundcolor'',[%.2f,%.2f,%.2f],''foregroundcolor'',[%.2f,%.2f,%.2f],''position'',[%.0f,%.0f,%.0f,%.0f],...\n',col1,col2,pos);
-            fprintf(fid,'\t\t''fontangle'',''%s'',''fontweight'',''%s'',''titleposition'',''%s'')%% %s\n',get(obj,'fontangle'),get(obj,'fontweight'),get(obj,'titleposition'),tag);
+            fprintf(fid,'\t\t''fontangle'',''%s'',''fontweight'',''%s'',''titleposition'',''%s'');%% %s\n',get(obj,'fontangle'),get(obj,'fontweight'),get(obj,'titleposition'),tag);
             fprintf(fid,'\n');
         elseif strcmp(get(obj,'type'),'uitable')
             col2 = get(obj,'foregroundcolor');
-            fprintf(fid,'\tuitable(''fontname'',''%s'',''fontsize'',%.1f,...\n',get(obj,'fontname'),get(obj,'fontsize'));
+            fprintf(fid,'\tuitable(''parent'',%s,''fontname'',''%s'',''fontsize'',%.1f,...\n',parentsTag{obj==objects},get(obj,'fontname'),get(obj,'fontsize'));
             fprintf(fid,'\t\t''foregroundcolor'',[%.2f,%.2f,%.2f],''position'',[%.0f,%.0f,%.0f,%.0f],...\n',col2,pos);
             fprintf(fid,'\t\t''fontangle'',''%s'',''fontweight'',''%s'');%% %s\n',get(obj,'fontangle'),get(obj,'fontweight'),tag);
             fprintf(fid,'\n');
