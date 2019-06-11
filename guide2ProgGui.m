@@ -47,7 +47,6 @@ function guide2ProgGui(figureName)
         pos = get(obj,'position');  % Position
         tag = get(obj,'tag');  % Object's Name, TAG
         
-        
         if strcmp(get(obj,'type'),'figure')
             % Relevant Properties
             col = get(obj,'color');
